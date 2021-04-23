@@ -1,6 +1,5 @@
 const { src, dest, watch, parallel, series } = require('gulp');
 
-const fileinclude = require('gulp-file-include'); // модуль для объединения файлов @@include('_www.html')
 const scss = require('gulp-sass'); // модуль для компиляции SASS (SCSS) в CSS
 const group_media = require('gulp-group-css-media-queries'); // модуль для сборки media запросов в CSS файлах
 const concat = require('gulp-concat'); // модуль для конкатинации файлов (+переименование)
@@ -64,18 +63,6 @@ function browsersync(cb) {
 		browser: 'chrome'
 	});
 	cb();
-}
-
-//*-----------Сборка html----------
-function html() {
-	return src(['app/html/**/*.html', '!app/html/**/_*.html'])
-		.pipe(fileinclude({
-			prefix: '@@',
-			basepath: '@file'
-		}))
-		.pipe(dest('./app'))
-		// .pipe(browserSync.stream())
-		.pipe(browserSync.reload({ stream: true }))
 }
 
 //*-------------Стили--------------
@@ -164,13 +151,13 @@ function cleanFonts() {
 //*========Функция сборки===========
 function build() {
 	return src([
-		'app/**/*.html', '!app/html/*', '!app/**/_*.html',
+		'app/**/*.html',
 		'app/css/*.min.css',
 		'app/js/*.min.js',
-		'app/fonts/*.{woff,woff2}',
-		// 'app/img/sprite.svg'
+		'app/fonts/*.{woff,woff2}'
 	], { base: 'app' })
 		.pipe(dest('dist'))
+
 }
 
 function cleanDist() {
@@ -179,11 +166,9 @@ function cleanDist() {
 
 //*=Функция слежения за изменениями=
 function watching() {
-	watch(['app/html/**/*.html'], html);
 	watch(['app/scss/**/*.scss'], styles);
 	watch(['app/js/**/*.js', '!app/js/main.min.js'], scripts);
-	// watch(['app/**/*.html'], html).on('change', browserSync.reload);
-	// watch(['app/img/**/*.svg'], svg);
+	watch(['app/**/*.html']).on('change', browserSync.reload);
 }
 
 function cb() { } // коллбэк
@@ -197,13 +182,13 @@ exports.cleanDist = cleanDist;
 exports.woff = woff;
 exports.woff2 = woff2;
 exports.cleanFonts = cleanFonts;
-exports.html = html;
 
 exports.watching = watching;
 
 exports.svg = series(cleanSvgSprite, svgSprite);
 exports.fonts = series(otf2ttf, woff, woff2, cleanFonts);
-exports.build = series(cleanDist, html, images, build);
-exports.default = parallel(styles, scripts, html, browsersync, watching);
+exports.build = series(cleanDist, images, build);
+exports.default = parallel(styles, scripts, browsersync, watching);
+
 
 exports.cb = cb;
